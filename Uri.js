@@ -66,8 +66,8 @@
    */
   function decode(s) {
     if (s) {
-      s = decodeURIComponent(s);
-      s = s.replace(re.pluses, ' ');
+        s = s.toString().replace(re.pluses, '%20');
+        s = decodeURIComponent(s);
     }
     return s;
   }
@@ -96,7 +96,7 @@
    * @return {array}      array of arrays (key/value pairs)
    */
   function parseQuery(str) {
-    var i, ps, p, n, k, v;
+    var i, ps, p, n, k, v, l;
     var pairs = [];
 
     if (typeof(str) === 'undefined' || str === null || str === '') {
@@ -114,8 +114,8 @@
       n = p.indexOf('=');
 
       if (n !== 0) {
-        k = decodeURIComponent(p.substring(0, n));
-        v = decodeURIComponent(p.substring(n + 1));
+        k = decode(p.substring(0, n));
+        v = decode(p.substring(n + 1));
         pairs.push(n === -1 ? [p, null] : [k, v]);
       }
 
@@ -177,7 +177,7 @@
    * @return {string}         query string
    */
   Uri.prototype.query = function(val) {
-    var s = '', i, param;
+    var s = '', i, param, l;
 
     if (typeof val !== 'undefined') {
       this.queryPairs = parseQuery(val);
@@ -193,7 +193,7 @@
       } else {
         s += param[0];
         s += '=';
-        if (param[1]) {
+        if (typeof param[1] !== 'undefined') {
           s += encodeURIComponent(param[1]);
         }
       }
@@ -207,7 +207,7 @@
    * @return {string}     first value found for key
    */
   Uri.prototype.getQueryParamValue = function (key) {
-    var param, i;
+    var param, i, l;
     for (i = 0, l = this.queryPairs.length; i < l; i++) {
       param = this.queryPairs[i];
       if (key === param[0]) {
@@ -222,7 +222,7 @@
    * @return {array}      array of values
    */
   Uri.prototype.getQueryParamValues = function (key) {
-    var arr = [], i, param;
+    var arr = [], i, param, l;
     for (i = 0, l = this.queryPairs.length; i < l; i++) {
       param = this.queryPairs[i];
       if (key === param[0]) {
@@ -239,7 +239,7 @@
    * @return {Uri}            returns self for fluent chaining
    */
   Uri.prototype.deleteQueryParam = function (key, val) {
-    var arr = [], i, param, keyMatchesFilter, valMatchesFilter;
+    var arr = [], i, param, keyMatchesFilter, valMatchesFilter, l;
 
     for (i = 0, l = this.queryPairs.length; i < l; i++) {
 
@@ -272,6 +272,20 @@
       this.queryPairs.push([key, val]);
     }
     return this;
+  };
+
+  /**
+   * test for the existence of a query parameter
+   * @param  {string}  key        check values for key
+   * @return {Boolean}            true if key exists, otherwise false
+   */
+  Uri.prototype.hasQueryParam = function (key) {
+    var i, len = this.queryPairs.length;
+    for (i = 0; i < len; i++) {
+      if (this.queryPairs[i][0] == key)
+        return true;
+    }
+    return false;
   };
 
   /**
